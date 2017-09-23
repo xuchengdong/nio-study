@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.channels.Pipe;
 
 /**
  * @author xuchengdong@qbao.com on 2017/9/18.
@@ -114,4 +115,35 @@ public class NewIOTest {
     @Test
     public void testSelector() throws IOException, InterruptedException {
     }
+
+    @Test
+    public void testPipe() throws IOException {
+        Pipe pipe = Pipe.open();
+        Pipe.SinkChannel sinkChannel = pipe.sink();
+
+        String newData = "New String to write to file..." + System.currentTimeMillis();
+        ByteBuffer buf = ByteBuffer.allocate(48);
+        buf.clear();
+        buf.put(newData.getBytes());
+
+        buf.flip();
+
+        while(buf.hasRemaining()) {
+            sinkChannel.write(buf);
+        }
+
+        Pipe.SourceChannel sourceChannel = pipe.source();
+        buf.clear();
+        int bytesRead = sourceChannel.read(buf);
+
+        buf.flip();
+
+        while (buf.hasRemaining()) {
+            System.out.print((char) buf.get());
+        }
+
+        sinkChannel.close();
+        sourceChannel.close();
+    }
+
 }
